@@ -1,0 +1,388 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0d0d1a;
+  font-family: 'Silkscreen', 'Press Start 2P', 'VT323', monospace;
+  color: #fff;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: never;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+#game {
+  display: block;
+  background: #1a1530;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  touch-action: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(13, 13, 26, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  text-align: center;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+#logo {
+  display: block;
+  width: min(86vw, 440px);
+  max-width: 440px;
+  height: auto;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 4px 0 rgba(0,0,0,0.6)) drop-shadow(0 8px 16px rgba(192, 57, 43, 0.4));
+  margin-bottom: 0;
+  animation: logoFloat 2.4s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.subtitle {
+  font-family: 'Press Start 2P', 'Silkscreen', monospace;
+  font-size: clamp(11px, 3vw, 14px);
+  letter-spacing: 0.3em;
+  color: #ff8a3d;
+  margin: 4px 0 22px;
+  text-shadow: 2px 2px 0 #000;
+}
+
+h2 {
+  font-family: 'Press Start 2P', 'Silkscreen', monospace;
+  font-size: clamp(22px, 6vw, 34px);
+  color: #ffd84a;
+  text-shadow: 3px 3px 0 #c0392b, 6px 6px 0 rgba(0,0,0,0.5);
+  margin-bottom: 12px;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.rules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  margin-bottom: 22px;
+  padding: 14px 18px;
+  background: rgba(0,0,0,0.55);
+  border: 3px solid #ffd84a;
+  border-radius: 4px;
+  box-shadow: 0 4px 0 #c0392b, inset 0 0 0 2px rgba(0,0,0,0.4);
+}
+
+.rule {
+  font-family: 'Silkscreen', 'Press Start 2P', monospace;
+  font-weight: 700;
+  font-size: clamp(12px, 3.4vw, 15px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  letter-spacing: 0.05em;
+}
+
+.rule b {
+  font-family: 'Press Start 2P', 'Silkscreen', monospace;
+  color: #6fff8a;
+  margin-left: 6px;
+  font-size: 0.78em;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.rule.bad b {
+  color: #ff6b6b;
+}
+
+.emoji {
+  font-size: 1.2em;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+}
+
+.hint {
+  font-family: 'Silkscreen', 'Press Start 2P', monospace;
+  font-weight: 700;
+  font-size: clamp(12px, 3.4vw, 14px);
+  color: #d4d4e0;
+  margin-bottom: 4px;
+  max-width: 320px;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+}
+
+.hint.small {
+  font-size: clamp(9px, 2.5vw, 11px);
+  font-family: 'Press Start 2P', 'Silkscreen', monospace;
+  color: #9090a8;
+  margin-bottom: 22px;
+  letter-spacing: 0.1em;
+}
+
+.btn {
+  font-family: 'Press Start 2P', 'Silkscreen', monospace;
+  font-size: clamp(13px, 3.6vw, 17px);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: #1a1530;
+  background: linear-gradient(180deg, #ffd84a 0%, #ffb347 50%, #ff8a3d 100%);
+  border: 3px solid #1a1530;
+  border-radius: 4px;
+  padding: 14px 28px;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #c0392b, 0 10px 20px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.15), inset 0 3px 0 rgba(255,255,255,0.4);
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+  margin-top: 8px;
+}
+
+.btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #c0392b, 0 4px 10px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.15), inset 0 3px 0 rgba(255,255,255,0.4);
+}
+
+.prize-box {
+  margin: 8px 0 6px;
+  padding: 16px 18px 14px;
+  background: rgba(0,0,0,0.45);
+  border: 3px solid #6fff8a;
+  border-radius: 4px;
+  box-shadow: 0 4px 0 #1a6b2c, inset 0 0 0 2px rgba(0,0,0,0.4);
+  max-width: 360px;
+  width: 100%;
+}
+
+.prize-headline {
+  font-family: 'Press Start 2P', 'Silkscreen', monospace;
+  font-size: clamp(11px, 3.2vw, 14px);
+  color: #6fff8a;
+  letter-spacing: 0.1em;
+  line-height: 1.7;
+  margin-bottom: 8px;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.prize-sub {
+  font-family: 'Silkscreen', 'Press Start 2P', monospace;
+  font-weight: 700;
+  font-size: clamp(11px, 3vw, 13px);
+  color: #fff;
+  line-height: 1.6;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.prize-sub b {
+  color: #ffd84a;
+}
+
+#ig-handle {
+  color: #6fff8a;
+}
+
+.share-status {
+  font-family: 'Silkscreen', 'Press Start 2P', monospace;
+  font-weight: 700;
+  font-size: clamp(10px, 2.6vw, 12px);
+  margin-top: 10px;
+  color: #ffd84a;
+  letter-spacing: 0.05em;
+  min-height: 14px;
+}
+
+.prize-btn {
+  background: linear-gradient(180deg, #6fff8a 0%, #4adf6c 50%, #2db84e 100%);
+  box-shadow: 0 6px 0 #1a6b2c, 0 10px 24px rgba(111, 255, 138, 0.4), inset 0 -3px 0 rgba(0,0,0,0.15), inset 0 3px 0 rgba(255,255,255,0.4);
+  animation: prizePulse 1.4s ease-in-out infinite;
+  margin-top: 4px;
+  width: 100%;
+}
+
+.prize-btn:active {
+  box-shadow: 0 2px 0 #1a6b2c, 0 4px 10px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.15), inset 0 3px 0 rgba(255,255,255,0.4);
+}
+
+@keyframes prizePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+.btn-secondary {
+  background: linear-gradient(180deg, #d4d4e0 0%, #9090a8 100%);
+  box-shadow: 0 4px 0 #444455, 0 6px 12px rgba(0,0,0,0.3), inset 0 -2px 0 rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,0.4);
+  font-size: clamp(11px, 3vw, 14px);
+  padding: 10px 22px;
+  margin-top: 10px;
+}
+
+.btn-secondary:active {
+  box-shadow: 0 1px 0 #444455, 0 2px 6px rgba(0,0,0,0.3), inset 0 -2px 0 rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,0.4);
+}
+
+.best, .best-line {
+  font-family: 'Press Start 2P', 'Silkscreen', monospace;
+  margin-top: 18px;
+  font-size: clamp(10px, 2.6vw, 12px);
+  color: #ffd84a;
+  letter-spacing: 0.1em;
+  text-shadow: 2px 2px 0 #000;
+  line-height: 1.6;
+}
+
+.final-label {
+  font-family: 'Press Start 2P', 'Silkscreen', monospace;
+  font-size: clamp(11px, 3vw, 13px);
+  color: #9090a8;
+  letter-spacing: 0.3em;
+  margin-bottom: 4px;
+}
+
+.final-score {
+  font-family: 'Press Start 2P', 'Silkscreen', monospace;
+  font-size: clamp(48px, 16vw, 80px);
+  font-weight: 900;
+  color: #ffd84a;
+  text-shadow: 4px 4px 0 #c0392b, 8px 8px 0 rgba(0,0,0,0.4);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+/* ---------- Coupon screen ---------- */
+.screenshot-cta {
+  font-family: 'Press Start 2P', 'Silkscreen', monospace;
+  color: #ffd84a !important;
+  font-size: clamp(11px, 3vw, 13px) !important;
+  letter-spacing: 0.08em !important;
+  margin-bottom: 14px !important;
+  text-shadow: 2px 2px 0 #000;
+  line-height: 1.7 !important;
+  animation: ctaPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes ctaPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.coupon-card {
+  background: linear-gradient(180deg, #fff8e0 0%, #ffeec0 100%);
+  border: 4px dashed #c0392b;
+  border-radius: 8px;
+  padding: 18px 16px 14px;
+  width: min(88vw, 360px);
+  box-shadow: 0 8px 0 rgba(192, 57, 43, 0.5), 0 16px 30px rgba(0,0,0,0.5);
+  margin-bottom: 22px;
+  position: relative;
+}
+
+.coupon-card::before,
+.coupon-card::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: #0d0d1a;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.coupon-card::before { left: -10px; }
+.coupon-card::after  { right: -10px; }
+
+#coupon-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  margin-bottom: 12px;
+  border-radius: 4px;
+}
+
+.coupon-meta {
+  border-top: 2px dashed #c0392b;
+  padding-top: 12px;
+  text-align: left;
+}
+
+.coupon-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+.coupon-label {
+  font-family: 'Press Start 2P', 'Silkscreen', monospace;
+  font-size: clamp(8px, 2.2vw, 10px);
+  color: #8a3a30;
+  letter-spacing: 0.15em;
+}
+
+.coupon-code {
+  font-family: 'Press Start 2P', 'Silkscreen', monospace;
+  font-size: clamp(13px, 3.6vw, 16px);
+  color: #1a1530;
+  letter-spacing: 0.1em;
+  background: #fff;
+  border: 2px solid #1a1530;
+  padding: 5px 9px;
+  border-radius: 3px;
+}
+
+.coupon-expiry {
+  font-family: 'Silkscreen', 'Press Start 2P', monospace;
+  font-weight: 700;
+  font-size: clamp(11px, 3vw, 13px);
+  color: #c0392b;
+  letter-spacing: 0.05em;
+}
+
+.coupon-fineprint {
+  font-family: 'Silkscreen', 'Press Start 2P', monospace;
+  font-weight: 700;
+  font-size: clamp(9px, 2.4vw, 10px);
+  color: #5a3417;
+  letter-spacing: 0.04em;
+  margin-top: 8px;
+  text-align: center;
+  line-height: 1.5;
+}

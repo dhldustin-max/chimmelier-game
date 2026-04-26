@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0d0d1a" />
+<title>Chimmelier - Korean Fried Chicken</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game"></canvas>
+
+    <div id="start-screen" class="overlay">
+      <img id="logo" src="assets/logo.png" alt="Chimmelier - Korean Fried Chicken" />
+      <p class="subtitle">CATCH THE CHICKEN</p>
+      <div class="rules">
+        <div class="rule"><span class="emoji">🍗</span> CHICKEN <b>+3</b></div>
+        <div class="rule"><span class="emoji">🍔</span> BURGER <b>+2</b></div>
+        <div class="rule bad"><span class="emoji">🥤</span> COLA <b>−1</b></div>
+        <div class="rule bad"><span class="emoji">🍟</span> FRIES <b>−1</b></div>
+      </div>
+      <p class="hint">DRAG THE CHEF TO CATCH<br/>ONLY THE CHICKEN!</p>
+      <p class="hint small">15 SECONDS · COMBO X5 FOR BONUS</p>
+      <button id="start-btn" class="btn">START</button>
+      <p id="best-score" class="best"></p>
+    </div>
+
+    <div id="gameover-screen" class="overlay hidden">
+      <h2>TIME'S UP!</h2>
+      <p class="final-label">FINAL SCORE</p>
+      <p id="final-score" class="final-score">0</p>
+      <p id="best-line" class="best-line"></p>
+
+      <div class="prize-box">
+        <p class="prize-headline">SHARE YOUR SCORE<br/>TO RECEIVE PRIZE</p>
+        <p class="prize-sub">Post to Instagram Stories &amp;<br/>tag <b id="ig-handle">@chimmelier</b> to unlock<br/>your <b>10% OFF</b> coupon!</p>
+        <button id="share-btn" class="btn prize-btn">📸 SHARE SCORE</button>
+        <p id="share-status" class="share-status"></p>
+      </div>
+
+      <button id="restart-btn" class="btn btn-secondary">PLAY AGAIN</button>
+    </div>
+
+    <div id="coupon-screen" class="overlay hidden">
+      <h2>YOUR PRIZE!</h2>
+      <p class="hint screenshot-cta">📸 SCREENSHOT THIS COUPON<br/>TO REDEEM IN STORE</p>
+
+      <div id="coupon-card" class="coupon-card">
+        <img id="coupon-img" src="assets/coupon.png" alt="10% off coupon" />
+        <div class="coupon-meta">
+          <div class="coupon-row">
+            <span class="coupon-label">CODE</span>
+            <span id="coupon-code" class="coupon-code">CHM-XXXXXX</span>
+          </div>
+          <div class="coupon-row">
+            <span class="coupon-label">VALID UNTIL</span>
+            <span id="coupon-expiry" class="coupon-expiry">—</span>
+          </div>
+          <p class="coupon-fineprint">One-time use · In-store only · Show at checkout</p>
+        </div>
+      </div>
+
+      <button id="coupon-done-btn" class="btn btn-secondary">DONE — PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

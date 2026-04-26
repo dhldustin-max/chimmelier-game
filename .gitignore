@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Claude Code workspace
+.claude/
+
+# Node (in case you add tooling later)
+node_modules/
+
+# Original asset files (kept locally as backup; not needed in repo)
+hf_*.png
+assets/hf_*.png
+assets/Untitled design*.png
+assets/Press Start 2P.png
