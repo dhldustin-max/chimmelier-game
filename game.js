@@ -140,11 +140,14 @@
     return out;
   }
 
-  // Strip the white "sticker" outline from a sprite by flood-filling
-  // inward from the existing transparent area, removing any near-white
-  // pixels it can reach. Interior whites (e.g. text inside the sprite)
-  // are left alone because they're surrounded by colored pixels.
-  function stripStickerEdge(img, whiteThreshold = 230) {
+  // Remove the "sticker" frame around a food sprite.
+  // The food sprites the user shipped have NO alpha channel — they're
+  // a dark checkerboard background → white sticker ring → food. We use
+  // the white ring as a wall: anything outside it (the dark bg) plus
+  // the ring itself become transparent. Interior whites (e.g. cola
+  // "FRESH!" text) are protected because they're not connected to the
+  // outside through white pixels.
+  function stripStickerBackground(img, whiteThreshold = 215) {
     const c = document.createElement('canvas');
     c.width = img.width; c.height = img.height;
     const cx = c.getContext('2d');
@@ -154,35 +157,76 @@
     const d = id.data;
     const w = c.width, h = c.height;
     const total = w * h;
-    const visited = new Uint8Array(total);
+
+    // Mask of "is white" pixels (the sticker outline)
+    const isWhite = new Uint8Array(total);
+    for (let p = 0; p < total; p++) {
+      const i = p * 4;
+      const r = d[i], g = d[i+1], b = d[i+2];
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      if (max >= whiteThreshold && (max - min) <= 25) isWhite[p] = 1;
+    }
+
+    // marked = pixels we'll make transparent (bg + sticker ring)
+    const marked = new Uint8Array(total);
     const stack = [];
 
-    // Seed with all already-transparent pixels
-    for (let p = 0; p < total; p++) {
-      if (d[p * 4 + 3] === 0) {
-        visited[p] = 1;
+    // Phase 1: seed the 4 borders with their non-white pixels, then BFS
+    // through any non-white pixel. This sweeps the entire outside region
+    // up to (but not crossing) the white sticker ring.
+    function seedBorder(p) {
+      if (!isWhite[p] && !marked[p]) {
+        marked[p] = 1;
         stack.push(p);
       }
     }
+    for (let x = 0; x < w; x++) { seedBorder(x); seedBorder((h - 1) * w + x); }
+    for (let y = 0; y < h; y++) { seedBorder(y * w); seedBorder(y * w + (w - 1)); }
 
     while (stack.length > 0) {
       const p = stack.pop();
       const x = p % w, y = (p - x) / w;
-      const neighbors = [];
-      if (x > 0)     neighbors.push(p - 1);
-      if (x < w - 1) neighbors.push(p + 1);
-      if (y > 0)     neighbors.push(p - w);
-      if (y < h - 1) neighbors.push(p + w);
-      for (const np of neighbors) {
-        if (visited[np]) continue;
-        const ni = np * 4;
-        const r = d[ni], g = d[ni + 1], b = d[ni + 2];
-        if (r >= whiteThreshold && g >= whiteThreshold && b >= whiteThreshold) {
-          visited[np] = 1;
-          d[ni + 3] = 0;
-          stack.push(np);
-        }
-      }
+      const tryNeighbor = (np) => {
+        if (marked[np] || isWhite[np]) return;
+        marked[np] = 1;
+        stack.push(np);
+      };
+      if (x > 0)     tryNeighbor(p - 1);
+      if (x < w - 1) tryNeighbor(p + 1);
+      if (y > 0)     tryNeighbor(p - w);
+      if (y < h - 1) tryNeighbor(p + w);
+    }
+
+    // Phase 2 + 3: from background pixels, flood through the ADJACENT
+    // white sticker ring. Interior whites stay alive because they have
+    // no path to the outside through white pixels.
+    const stickerStack = [];
+    function trySticker(np, fromBg) {
+      if (marked[np] || !isWhite[np]) return;
+      marked[np] = 1;
+      stickerStack.push(np);
+    }
+    for (let p = 0; p < total; p++) {
+      if (!marked[p]) continue;
+      const x = p % w, y = (p - x) / w;
+      if (x > 0)     trySticker(p - 1);
+      if (x < w - 1) trySticker(p + 1);
+      if (y > 0)     trySticker(p - w);
+      if (y < h - 1) trySticker(p + w);
+    }
+    while (stickerStack.length > 0) {
+      const p = stickerStack.pop();
+      const x = p % w, y = (p - x) / w;
+      if (x > 0)     trySticker(p - 1);
+      if (x < w - 1) trySticker(p + 1);
+      if (y > 0)     trySticker(p - w);
+      if (y < h - 1) trySticker(p + w);
+    }
+
+    // Apply alpha (canvas ImageData is always RGBA even if source is RGB)
+    for (let p = 0; p < total; p++) {
+      if (marked[p]) d[p * 4 + 3] = 0;
     }
 
     cx.putImageData(id, 0, 0);
@@ -1400,9 +1444,9 @@
       try { taglineImg.src = cropped.toDataURL('image/png'); } catch (e) {}
       assets.tagline = cropped;
     }
-    // Strip white sticker outlines from food sprites
+    // Strip the sticker frame (dark bg + white ring) around each food sprite
     for (const key of ['food_chickenburger','food_drumstick','food_cola','food_treadmill','food_bomb']) {
-      if (assets[key]) assets[key] = stripStickerEdge(assets[key], 225);
+      if (assets[key]) assets[key] = stripStickerBackground(assets[key], 215);
     }
     refreshBestOnStart();
     requestAnimationFrame((t) => { lastTime = t; loop(t); });
