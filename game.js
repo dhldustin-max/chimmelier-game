@@ -4,12 +4,16 @@
   const VW = 480;
   const VH = 800;
   const GAME_DURATION = 15;
+  const SCORE_CAP = 50;   // game ends instantly when player reaches this
 
+  // Each entry: weight controls spawn frequency, color tints the catch effects.
+  // Sprites loaded from assets/food_<key>.png
   const FOOD_TYPES = {
-    chicken: { points: 3, weight: 38, good: true, color: '#ffd84a' },
-    burger:  { points: 2, weight: 28, good: true, color: '#ffb347' },
-    cola:    { points: -1, weight: 17, good: false, color: '#ff6b6b' },
-    fries:   { points: -1, weight: 17, good: false, color: '#ff6b6b' },
+    chickenburger: { points:  3, weight: 22, good: true,  color: '#ffd84a', label: 'CHICKEN BURGER' },
+    drumstick:     { points:  2, weight: 28, good: true,  color: '#ffb347', label: 'DRUMSTICK' },
+    cola:          { points:  1, weight: 22, good: true,  color: '#ff8a3d', label: 'COLA' },
+    treadmill:     { points: -1, weight: 18, good: false, color: '#ff6b6b', label: 'TREADMILL' },
+    bomb:          { points: -3, weight: 10, good: false, color: '#ff3b3b', label: 'BOMB' },
   };
 
   const FONT_PIXEL = `'Press Start 2P', 'Silkscreen', monospace`;
@@ -44,6 +48,7 @@
   const bestScoreEl    = document.getElementById('best-score');
   const bestLineEl     = document.getElementById('best-line');
   const logoImg        = document.getElementById('logo');
+  const gameOverTitle  = document.getElementById('game-over-title');
 
   if (igHandleEl) igHandleEl.textContent = IG_HANDLE;
 
@@ -250,7 +255,19 @@
     }
   }
 
-  // --- Food pixel art -----------------------------------------------------
+  // --- Food sprite drawing (uses assets/food_<key>.png) -------------------
+  function drawFoodSprite(type, size) {
+    const sprite = assets['food_' + type];
+    if (sprite) {
+      ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+      return;
+    }
+    // fallback: colored square if sprite missing
+    ctx.fillStyle = FOOD_TYPES[type] ? FOOD_TYPES[type].color : '#fff';
+    ctx.fillRect(-size / 2, -size / 2, size, size);
+  }
+
+  // --- Legacy pixel art (kept as fallback if sprites fail to load) -------
   function drawChicken(x, y, s) {
     const px = (cx, cy, cw, ch, color) => { ctx.fillStyle = color; ctx.fillRect(x + cx*s, y + cy*s, cw*s, ch*s); };
     px(6, 0, 4, 2, '#fff5d6');
@@ -340,6 +357,7 @@
   // --- Game state ---------------------------------------------------------
   const state = {
     running: false,
+    won: false,
     timeLeft: GAME_DURATION,
     score: 0,
     combo: 0,
@@ -370,6 +388,7 @@
 
   function resetGame() {
     state.running = true;
+    state.won = false;
     state.timeLeft = GAME_DURATION;
     state.score = 0;
     state.combo = 0;
@@ -539,7 +558,8 @@
 
       if (rectsOverlap(foodHitbox(f), ph)) {
         const def = FOOD_TYPES[f.type];
-        state.score += def.points;
+        state.score = Math.max(0, state.score + def.points);
+        if (state.score > SCORE_CAP) state.score = SCORE_CAP;
         if (def.good) {
           state.combo += 1;
           let bonus = 0;
@@ -576,6 +596,12 @@
           player.shakeX = (Math.random() < 0.5 ? -1 : 1) * 6;
         }
         state.foods.splice(i, 1);
+        // Win check — hit the cap, end game right away
+        if (state.score >= SCORE_CAP) {
+          state.won = true;
+          endGame();
+          return;
+        }
         continue;
       }
       if (f.y - f.size > VH) {
@@ -655,14 +681,14 @@
     if (assets.logo) {
       logoNeonPhase += 0.04;
       const flicker = 0.85 + 0.15 * Math.sin(logoNeonPhase * 3) * Math.sin(logoNeonPhase);
-      const lw = 240;
+      const lw = 360;
       const lh = lw * (assets.logo.height / assets.logo.width);
       const lx = (VW - lw) / 2;
-      const ly = 80;
+      const ly = 90;
       // soft red glow halo
-      const glowR = 90;
+      const glowR = 140;
       const grad = ctx.createRadialGradient(VW/2, ly + lh/2, 10, VW/2, ly + lh/2, glowR);
-      grad.addColorStop(0, `rgba(255, 100, 60, ${0.28 * flicker})`);
+      grad.addColorStop(0, `rgba(255, 100, 60, ${0.32 * flicker})`);
       grad.addColorStop(1, 'rgba(255, 100, 60, 0)');
       ctx.fillStyle = grad;
       ctx.fillRect(VW/2 - glowR, ly + lh/2 - glowR, glowR*2, glowR*2);
@@ -734,9 +760,7 @@
     ctx.save();
     ctx.translate(f.x, f.y);
     ctx.rotate(f.rot);
-    const drawer = FOOD_DRAW[f.type];
-    const s = f.size / 16;
-    drawer(-f.size / 2, -f.size / 2, s);
+    drawFoodSprite(f.type, f.size);
     ctx.restore();
   }
 
@@ -890,22 +914,33 @@
 
   // --- Game over ----------------------------------------------------------
   let lastEndScore = 0;
+  let lastEndWon = false;
+  let hasShared = false;
   function endGame() {
     state.running = false;
     stopBgm();
-    sfxOver();
+    if (state.won) sfxGreat(); else sfxOver();
     lastEndScore = state.score;
+    lastEndWon = !!state.won;
+    hasShared = false;
+    gameOverTitle.textContent = state.won ? 'YOU WIN! 🏆' : "TIME'S UP!";
     finalScoreEl.textContent = String(state.score);
     const prev = getBest();
     const best = Math.max(state.score, prev);
     setBest(best);
-    bestLineEl.textContent = state.score > 0 && state.score >= best
-      ? `★ NEW HIGH SCORE: ${best} ★`
-      : `BEST: ${best}`;
-    // Reset share button for new round
+    if (state.won) {
+      bestLineEl.textContent = `★ MAX SCORE — ${SCORE_CAP} POINTS ★`;
+    } else {
+      bestLineEl.textContent = state.score > 0 && state.score >= best
+        ? `★ NEW HIGH SCORE: ${best} ★`
+        : `BEST: ${best}`;
+    }
+    // Reset share button + coupon for new round
+    currentCoupon = null;
     shareBtn.disabled = false;
     shareBtn.textContent = '📸 SHARE SCORE';
     shareStatusEl.textContent = '';
+    removeSharedFallbackButton();
     couponScreen.classList.add('hidden');
     gameOverScreen.classList.remove('hidden');
   }
@@ -1094,6 +1129,9 @@
     shareBtn.disabled = true;
     shareBtn.textContent = 'OPENING INSTAGRAM…';
     shareStatusEl.textContent = '';
+    // Mark as shared NOW so visibilitychange recovery works even if the
+    // user backgrounds the tab during the share sheet.
+    hasShared = true;
 
     // Build the share card image
     let blob, file;
@@ -1105,13 +1143,13 @@
       shareStatusEl.textContent = 'Could not build share image.';
       shareBtn.disabled = false;
       shareBtn.textContent = '📸 SHARE SCORE';
+      hasShared = false;
       return;
     }
 
     const shareText = `I scored ${lastEndScore} points at Chimmelier! 🍗 Tag ${IG_HANDLE} ${SHARE_HASHTAGS}`;
 
     // Path A: Native share sheet with file (HTTPS only, modern mobile)
-    // This is the cleanest path — opens system share sheet, user picks Instagram → Stories.
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({
@@ -1126,9 +1164,10 @@
           shareStatusEl.textContent = 'Cancelled — tap again to share';
           shareBtn.disabled = false;
           shareBtn.textContent = '📸 SHARE SCORE';
+          hasShared = false;
           return;
         }
-        // fall through
+        // fall through to Path B
       }
     }
 
@@ -1138,14 +1177,47 @@
     openInstagram();
     shareStatusEl.innerHTML =
       `Score saved &amp; Instagram opened!<br/>` +
-      `Upload to Stories and tag ${IG_HANDLE}`;
+      `Upload to Stories &amp; tag ${IG_HANDLE}<br/>` +
+      `<b>Come back here for your coupon ↓</b>`;
+    // Reveal coupon shortly after — the user is now in IG.
+    // When they return to this tab, the coupon screen is already up.
     setTimeout(revealCoupon, 1200);
+    // Also offer a manual button as ultimate fallback
+    showSharedFallbackButton();
+  }
+
+  // Manual fallback: if the user thinks the share didn't trigger the coupon,
+  // they can tap this to reveal it. We only show it after they've shared once.
+  function showSharedFallbackButton() {
+    if (document.getElementById('manual-coupon-btn')) return;
+    const btn = document.createElement('button');
+    btn.id = 'manual-coupon-btn';
+    btn.className = 'btn btn-secondary';
+    btn.textContent = "I SHARED — SHOW MY COUPON";
+    btn.style.marginTop = '14px';
+    btn.addEventListener('click', () => {
+      ensureAudio();
+      revealCoupon();
+    });
+    // insert after the share status, inside the prize box
+    if (shareStatusEl && shareStatusEl.parentNode) {
+      shareStatusEl.parentNode.appendChild(btn);
+    }
+  }
+  function removeSharedFallbackButton() {
+    const btn = document.getElementById('manual-coupon-btn');
+    if (btn) btn.remove();
   }
 
   function revealCoupon() {
-    const coupon = issueCoupon();
-    couponCodeEl.textContent = coupon.code;
-    couponExpiryEl.textContent = formatExpiry(coupon.expiry);
+    // Idempotent — if coupon already shown (or already issued for this round), do nothing.
+    if (!couponScreen.classList.contains('hidden')) return;
+    if (!currentCoupon) {
+      const coupon = issueCoupon();
+      couponCodeEl.textContent = coupon.code;
+      couponExpiryEl.textContent = formatExpiry(coupon.expiry);
+    }
+    removeSharedFallbackButton();
     gameOverScreen.classList.add('hidden');
     couponScreen.classList.remove('hidden');
   }
@@ -1172,10 +1244,25 @@
     resetGame();
   });
 
-  // Pause BGM when tab hidden
+  // Pause BGM when tab hidden + recover the coupon flow when user returns
+  // from Instagram. If they shared but coupon screen isn't showing yet,
+  // surface it now (handles cases where the share promise never resolved
+  // because the user app-switched to Instagram and back).
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) stopBgm();
-    else if (state.running) startBgm();
+    if (document.hidden) {
+      stopBgm();
+    } else {
+      if (state.running) startBgm();
+      const onGameOver = !gameOverScreen.classList.contains('hidden');
+      if (hasShared && onGameOver) {
+        revealCoupon();
+      }
+    }
+  });
+  // Same recovery on focus (some browsers don't fire visibilitychange)
+  window.addEventListener('focus', () => {
+    const onGameOver = !gameOverScreen.classList.contains('hidden');
+    if (hasShared && onGameOver) revealCoupon();
   });
 
   // --- Boot ---------------------------------------------------------------
@@ -1185,6 +1272,11 @@
     loadImage('background', 'assets/background.png'),
     loadImage('logo', 'assets/logo.png'),
     loadImage('coupon', 'assets/coupon.png'),
+    loadImage('food_chickenburger', 'assets/food_burger.png'),
+    loadImage('food_drumstick',     'assets/food_drumstick.png'),
+    loadImage('food_cola',          'assets/food_cola.png'),
+    loadImage('food_treadmill',     'assets/food_treadmill.png'),
+    loadImage('food_bomb',          'assets/food_bomb.png'),
     document.fonts ? document.fonts.ready : Promise.resolve(),
   ]).then(() => {
     if (assets.character) {

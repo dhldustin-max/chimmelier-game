@@ -18,21 +18,22 @@
 
     <div id="start-screen" class="overlay">
       <img id="logo" src="assets/logo.png" alt="Chimmelier - Korean Fried Chicken" />
-      <p class="subtitle">CATCH THE CHICKEN</p>
+      <img id="tagline" src="assets/tagline.png" alt="World Best Korean Fried Chicken" />
       <div class="rules">
-        <div class="rule"><span class="emoji">🍗</span> CHICKEN <b>+3</b></div>
-        <div class="rule"><span class="emoji">🍔</span> BURGER <b>+2</b></div>
-        <div class="rule bad"><span class="emoji">🥤</span> COLA <b>−1</b></div>
-        <div class="rule bad"><span class="emoji">🍟</span> FRIES <b>−1</b></div>
+        <div class="rule"><span class="emoji">🍔</span> CHICKEN BURGER <b>+3</b></div>
+        <div class="rule"><span class="emoji">🍗</span> DRUMSTICK <b>+2</b></div>
+        <div class="rule"><span class="emoji">🥤</span> COLA <b>+1</b></div>
+        <div class="rule bad"><span class="emoji">🏃</span> TREADMILL <b>−1</b></div>
+        <div class="rule bad"><span class="emoji">💣</span> BOMB <b>−3</b></div>
       </div>
-      <p class="hint">DRAG THE CHEF TO CATCH<br/>ONLY THE CHICKEN!</p>
-      <p class="hint small">15 SECONDS · COMBO X5 FOR BONUS</p>
+      <p class="hint">DRAG THE CHEF TO CATCH<br/>FOOD &amp; DODGE BOMBS!</p>
+      <p class="hint small">15 SECONDS · REACH 50 PTS TO WIN</p>
       <button id="start-btn" class="btn">START</button>
       <p id="best-score" class="best"></p>
     </div>
 
     <div id="gameover-screen" class="overlay hidden">
-      <h2>TIME'S UP!</h2>
+      <h2 id="game-over-title">TIME'S UP!</h2>
       <p class="final-label">FINAL SCORE</p>
       <p id="final-score" class="final-score">0</p>
       <p id="best-line" class="best-line"></p>
