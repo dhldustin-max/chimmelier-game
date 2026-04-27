@@ -48,6 +48,7 @@
   const bestScoreEl    = document.getElementById('best-score');
   const bestLineEl     = document.getElementById('best-line');
   const logoImg        = document.getElementById('logo');
+  const taglineImg     = document.getElementById('tagline');
   const gameOverTitle  = document.getElementById('game-over-title');
 
   if (igHandleEl) igHandleEl.textContent = IG_HANDLE;
@@ -86,6 +87,57 @@
       img.onerror = () => { assets[name] = null; resolve(); };
       img.src = src;
     });
+  }
+
+  // Auto-crop an image to the bounding box of its non-white, non-transparent
+  // pixels. Also makes any white background fully transparent. Used for the
+  // tagline image which ships as a 1024×1024 square with mostly empty space.
+  function autoCropToContent(img, whiteThreshold = 240, padding = 6) {
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    const cx = c.getContext('2d');
+    cx.imageSmoothingEnabled = false;
+    cx.drawImage(img, 0, 0);
+    const id = cx.getImageData(0, 0, c.width, c.height);
+    const d = id.data;
+    const w = c.width, h = c.height;
+
+    let minX = w, minY = h, maxX = -1, maxY = -1;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        const a = d[i + 3];
+        if (a === 0) continue;
+        const r = d[i], g = d[i + 1], b = d[i + 2];
+        if (r >= whiteThreshold && g >= whiteThreshold && b >= whiteThreshold) continue;
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+    }
+    if (maxX < minX || maxY < minY) return img;
+
+    minX = Math.max(0, minX - padding);
+    minY = Math.max(0, minY - padding);
+    maxX = Math.min(w - 1, maxX + padding);
+    maxY = Math.min(h - 1, maxY + padding);
+    const cropW = maxX - minX + 1;
+    const cropH = maxY - minY + 1;
+
+    const out = document.createElement('canvas');
+    out.width = cropW; out.height = cropH;
+    const ox = out.getContext('2d');
+    ox.imageSmoothingEnabled = false;
+    ox.drawImage(img, -minX, -minY);
+
+    // also strip white background → transparent
+    const cropData = ox.getImageData(0, 0, cropW, cropH);
+    const cd = cropData.data;
+    for (let i = 0; i < cd.length; i += 4) {
+      const r = cd[i], g = cd[i + 1], b = cd[i + 2];
+      if (r >= whiteThreshold && g >= whiteThreshold && b >= whiteThreshold) cd[i + 3] = 0;
+    }
+    ox.putImageData(cropData, 0, 0);
+    return out;
   }
 
   // Strip the white "sticker" outline from a sprite by flood-filling
@@ -1321,6 +1373,7 @@
     loadImage('background', 'assets/background.png'),
     loadImage('logo', 'assets/logo.png'),
     loadImage('coupon', 'assets/coupon.png'),
+    loadImage('tagline', 'assets/tagline.png'),
     loadImage('food_chickenburger', 'assets/food_burger.png'),
     loadImage('food_drumstick',     'assets/food_drumstick.png'),
     loadImage('food_cola',          'assets/food_cola.png'),
@@ -1339,6 +1392,13 @@
       try { logoImg.src = stripped.toDataURL('image/png'); } catch (e) {}
       // also keep the stripped version for in-canvas rendering
       assets.logo = stripped;
+    }
+    if (assets.tagline && taglineImg) {
+      // Auto-crop the 1024×1024 square down to just the red text and
+      // make its white background transparent.
+      const cropped = autoCropToContent(assets.tagline, 240, 8);
+      try { taglineImg.src = cropped.toDataURL('image/png'); } catch (e) {}
+      assets.tagline = cropped;
     }
     // Strip white sticker outlines from food sprites
     for (const key of ['food_chickenburger','food_drumstick','food_cola','food_treadmill','food_bomb']) {
