@@ -46,7 +46,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 14px 16px;
   background: rgba(13, 13, 26, 0.85);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -61,14 +61,14 @@ html, body {
 
 #logo {
   display: block;
-  width: min(86vw, 440px);
-  max-width: 440px;
+  width: min(72vw, 340px);
+  max-width: 340px;
   height: auto;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
   filter: drop-shadow(0 4px 0 rgba(0,0,0,0.6)) drop-shadow(0 8px 16px rgba(192, 57, 43, 0.4));
-  margin-bottom: 0;
+  margin-bottom: -8px;
   animation: logoFloat 2.4s ease-in-out infinite;
 }
 
@@ -88,13 +88,13 @@ html, body {
 
 #tagline {
   display: block;
-  width: min(80vw, 380px);
-  max-width: 380px;
+  width: min(56vw, 260px);
+  max-width: 260px;
   height: auto;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
-  margin: -6px 0 16px;
+  margin: -10px 0 10px;
   filter: drop-shadow(2px 2px 0 #000) drop-shadow(0 4px 12px rgba(192, 57, 43, 0.5));
 }
 
@@ -110,33 +110,42 @@ h2 {
 
 .rules {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 16px;
-  margin-bottom: 22px;
-  padding: 14px 18px;
+  grid-template-columns: 1fr;
+  gap: 4px 14px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
   background: rgba(0,0,0,0.55);
-  border: 3px solid #ffd84a;
+  border: 2px solid #ffd84a;
   border-radius: 4px;
-  box-shadow: 0 4px 0 #c0392b, inset 0 0 0 2px rgba(0,0,0,0.4);
+  box-shadow: 0 3px 0 #c0392b, inset 0 0 0 2px rgba(0,0,0,0.4);
+  width: min(86vw, 320px);
 }
 
 .rule {
   font-family: 'Silkscreen', 'Press Start 2P', monospace;
   font-weight: 700;
-  font-size: clamp(12px, 3.4vw, 15px);
+  font-size: clamp(11px, 3.2vw, 14px);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
   color: #fff;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
+  padding: 1px 0;
+}
+
+.rule > span.emoji {
+  margin-right: 4px;
 }
 
 .rule b {
   font-family: 'Press Start 2P', 'Silkscreen', monospace;
   color: #6fff8a;
-  margin-left: 6px;
-  font-size: 0.78em;
+  margin-left: auto;
+  font-size: 0.72em;
   text-shadow: 1px 1px 0 #000;
+  min-width: 32px;
+  text-align: right;
 }
 
 .rule.bad b {
@@ -151,20 +160,20 @@ h2 {
 .hint {
   font-family: 'Silkscreen', 'Press Start 2P', monospace;
   font-weight: 700;
-  font-size: clamp(12px, 3.4vw, 14px);
+  font-size: clamp(11px, 3vw, 13px);
   color: #d4d4e0;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   max-width: 320px;
-  line-height: 1.6;
-  letter-spacing: 0.06em;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
 }
 
 .hint.small {
-  font-size: clamp(9px, 2.5vw, 11px);
+  font-size: clamp(8px, 2.3vw, 10px);
   font-family: 'Press Start 2P', 'Silkscreen', monospace;
   color: #9090a8;
-  margin-bottom: 22px;
-  letter-spacing: 0.1em;
+  margin-bottom: 14px;
+  letter-spacing: 0.08em;
 }
 
 .btn {
@@ -176,12 +185,12 @@ h2 {
   background: linear-gradient(180deg, #ffd84a 0%, #ffb347 50%, #ff8a3d 100%);
   border: 3px solid #1a1530;
   border-radius: 4px;
-  padding: 14px 28px;
+  padding: 12px 26px;
   cursor: pointer;
-  box-shadow: 0 6px 0 #c0392b, 0 10px 20px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.15), inset 0 3px 0 rgba(255,255,255,0.4);
+  box-shadow: 0 5px 0 #c0392b, 0 10px 20px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.15), inset 0 3px 0 rgba(255,255,255,0.4);
   transition: transform 0.06s ease, box-shadow 0.06s ease;
   text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .btn:active {
@@ -269,8 +278,8 @@ h2 {
 
 .best, .best-line {
   font-family: 'Press Start 2P', 'Silkscreen', monospace;
-  margin-top: 18px;
-  font-size: clamp(10px, 2.6vw, 12px);
+  margin-top: 12px;
+  font-size: clamp(9px, 2.4vw, 11px);
   color: #ffd84a;
   letter-spacing: 0.1em;
   text-shadow: 2px 2px 0 #000;

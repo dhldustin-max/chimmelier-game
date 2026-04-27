@@ -88,6 +88,55 @@
     });
   }
 
+  // Strip the white "sticker" outline from a sprite by flood-filling
+  // inward from the existing transparent area, removing any near-white
+  // pixels it can reach. Interior whites (e.g. text inside the sprite)
+  // are left alone because they're surrounded by colored pixels.
+  function stripStickerEdge(img, whiteThreshold = 230) {
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    const cx = c.getContext('2d');
+    cx.imageSmoothingEnabled = false;
+    cx.drawImage(img, 0, 0);
+    const id = cx.getImageData(0, 0, c.width, c.height);
+    const d = id.data;
+    const w = c.width, h = c.height;
+    const total = w * h;
+    const visited = new Uint8Array(total);
+    const stack = [];
+
+    // Seed with all already-transparent pixels
+    for (let p = 0; p < total; p++) {
+      if (d[p * 4 + 3] === 0) {
+        visited[p] = 1;
+        stack.push(p);
+      }
+    }
+
+    while (stack.length > 0) {
+      const p = stack.pop();
+      const x = p % w, y = (p - x) / w;
+      const neighbors = [];
+      if (x > 0)     neighbors.push(p - 1);
+      if (x < w - 1) neighbors.push(p + 1);
+      if (y > 0)     neighbors.push(p - w);
+      if (y < h - 1) neighbors.push(p + w);
+      for (const np of neighbors) {
+        if (visited[np]) continue;
+        const ni = np * 4;
+        const r = d[ni], g = d[ni + 1], b = d[ni + 2];
+        if (r >= whiteThreshold && g >= whiteThreshold && b >= whiteThreshold) {
+          visited[np] = 1;
+          d[ni + 3] = 0;
+          stack.push(np);
+        }
+      }
+    }
+
+    cx.putImageData(id, 0, 0);
+    return c;
+  }
+
   // Strip a near-uniform background color from an image and return a canvas.
   function removeBackground(img, sampleX, sampleY, tolerance) {
     const c = document.createElement('canvas');
@@ -426,10 +475,10 @@
     const baseSpeed = 220 + progress * 320;
     const speed = baseSpeed * (0.85 + Math.random() * 0.3);
     state.foods.push({
-      type, x, y: -40, vy: speed,
+      type, x, y: -50, vy: speed,
       rot: (Math.random() - 0.5) * 0.4,
       rotV: (Math.random() - 0.5) * 1.5,
-      size: 56,
+      size: 84,
     });
   }
 
@@ -1290,6 +1339,10 @@
       try { logoImg.src = stripped.toDataURL('image/png'); } catch (e) {}
       // also keep the stripped version for in-canvas rendering
       assets.logo = stripped;
+    }
+    // Strip white sticker outlines from food sprites
+    for (const key of ['food_chickenburger','food_drumstick','food_cola','food_treadmill','food_bomb']) {
+      if (assets[key]) assets[key] = stripStickerEdge(assets[key], 225);
     }
     refreshBestOnStart();
     requestAnimationFrame((t) => { lastTime = t; loop(t); });
