@@ -401,10 +401,16 @@
   }
 
   // --- Food sprite drawing (uses assets/food_<key>.png) -------------------
+  // Preserves aspect ratio so non-square sprites (e.g. 191x256) don't squish.
+  // `size` is the longer side; the shorter side scales proportionally.
   function drawFoodSprite(type, size) {
     const sprite = assets['food_' + type];
     if (sprite) {
-      ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+      const aspect = sprite.width / sprite.height;
+      let dw, dh;
+      if (aspect >= 1) { dw = size; dh = size / aspect; }
+      else             { dh = size; dw = size * aspect; }
+      ctx.drawImage(sprite, -dw / 2, -dh / 2, dw, dh);
       return;
     }
     // fallback: colored square if sprite missing
@@ -1444,10 +1450,7 @@
       try { taglineImg.src = cropped.toDataURL('image/png'); } catch (e) {}
       assets.tagline = cropped;
     }
-    // Strip the sticker frame (dark bg + white ring) around each food sprite
-    for (const key of ['food_chickenburger','food_drumstick','food_cola','food_treadmill','food_bomb']) {
-      if (assets[key]) assets[key] = stripStickerBackground(assets[key], 215);
-    }
+    // Food sprites ship pre-cleaned (transparent backgrounds), no stripping needed.
     refreshBestOnStart();
     requestAnimationFrame((t) => { lastTime = t; loop(t); });
   });
